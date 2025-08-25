@@ -3,7 +3,7 @@ import axios from 'axios'
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
 
 const api = axios.create({
-  baseURL: `${API_BASE_URL}/api`,
+  baseURL: `${API_BASE_URL}/sigils`, // Fixed: removed duplicate /api
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -37,7 +37,7 @@ api.interceptors.response.use(
 
 export const generateSigil = async (intention, category = 'general') => {
   try {
-    const response = await api.post('/sigils/generate', {
+    const response = await api.post('/generate', {
       intention,
       category,
       timestamp: new Date().toISOString()
@@ -51,7 +51,7 @@ export const generateSigil = async (intention, category = 'general') => {
 
 export const saveSigil = async (sigilData) => {
   try {
-    const response = await api.post('/sigils', sigilData)
+    const response = await api.post('/', sigilData)
     return response.data
   } catch (error) {
     console.error('Error saving sigil:', error)
@@ -62,7 +62,7 @@ export const saveSigil = async (sigilData) => {
 export const getAllSigils = async (params = {}) => {
   try {
     const queryString = new URLSearchParams(params).toString()
-    const response = await api.get(`/sigils${queryString ? `?${queryString}` : ''}`)
+    const response = await api.get(`/${queryString ? `?${queryString}` : ''}`)
     // unwrap if backend sends { sigils: [...] }
     return response.data.sigils || response.data
   } catch (error) {
@@ -74,7 +74,7 @@ export const getAllSigils = async (params = {}) => {
 export const getMySigils = async (params = {}) => {
   try {
     const queryString = new URLSearchParams(params).toString()
-    const response = await api.get(`/sigils/my${queryString ? `?${queryString}` : ''}`)
+    const response = await api.get(`/my${queryString ? `?${queryString}` : ''}`)
     return response.data
   } catch (error) {
     console.error('Error fetching user sigils:', error)
@@ -84,7 +84,7 @@ export const getMySigils = async (params = {}) => {
 
 export const getSigilById = async (id) => {
   try {
-    const response = await api.get(`/sigils/${id}`)
+    const response = await api.get(`/${id}`)
     return response.data
   } catch (error) {
     console.error('Error fetching sigil:', error)
@@ -94,7 +94,7 @@ export const getSigilById = async (id) => {
 
 export const updateSigil = async (id, updates) => {
   try {
-    const response = await api.patch(`/sigils/${id}`, updates)
+    const response = await api.patch(`/${id}`, updates)
     return response.data
   } catch (error) {
     console.error('Error updating sigil:', error)
@@ -104,7 +104,7 @@ export const updateSigil = async (id, updates) => {
 
 export const deleteSigil = async (id) => {
   try {
-    const response = await api.delete(`/sigils/${id}`)
+    const response = await api.delete(`/${id}`)
     return response.data
   } catch (error) {
     console.error('Error deleting sigil:', error)
@@ -115,7 +115,7 @@ export const deleteSigil = async (id) => {
 export const getSigilsByCategory = async (category, params = {}) => {
   try {
     const queryString = new URLSearchParams(params).toString()
-    const response = await api.get(`/sigils/category/${category}${queryString ? `?${queryString}` : ''}`)
+    const response = await api.get(`/category/${category}${queryString ? `?${queryString}` : ''}`)
     return response.data
   } catch (error) {
     console.error('Error fetching sigils by category:', error)
@@ -126,7 +126,7 @@ export const getSigilsByCategory = async (category, params = {}) => {
 export const searchSigils = async (query, params = {}) => {
   try {
     const searchParams = new URLSearchParams({ q: query, ...params }).toString()
-    const response = await api.get(`/sigils/search?${searchParams}`)
+    const response = await api.get(`/search?${searchParams}`)
     return response.data
   } catch (error) {
     console.error('Error searching sigils:', error)
@@ -136,7 +136,7 @@ export const searchSigils = async (query, params = {}) => {
 
 export const trackDownload = async (id) => {
   try {
-    const response = await api.post(`/sigils/${id}/download`)
+    const response = await api.post(`/${id}/download`)
     return response.data
   } catch (error) {
     console.error('Error tracking download:', error)
@@ -146,7 +146,7 @@ export const trackDownload = async (id) => {
 
 export const getSigilStats = async () => {
   try {
-    const response = await api.get('/sigils/stats/summary')
+    const response = await api.get('/stats/summary')
     return response.data
   } catch (error) {
     console.error('Error fetching sigil stats:', error)
