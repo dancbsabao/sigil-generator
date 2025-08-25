@@ -37,6 +37,8 @@ app.use(cors({
   credentials: true,
 }));
 
+app.use(cors({ origin: "https://sigil-generator-eta.vercel.app/" }));
+
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
