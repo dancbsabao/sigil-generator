@@ -817,36 +817,112 @@ const TarotGenerator = () => {
   const generateAIImage = async (card, intention) => {
     try {
       if (!card) throw new Error("No card provided for AI image generation");
-  
-      const variantInfo =
-        TAROT_VARIANTS[card.variant] || TAROT_VARIANTS["rider-waite"];
+
+      const variantInfo = TAROT_VARIANTS[card.variant] || TAROT_VARIANTS["rider-waite"];
       const cardName = card.name || "Unknown Card";
       const symbolism = card.symbolism || "mystical symbolism";
-  
+
       const prompt = `A mystical tarot card image for ${cardName}, inspired by ${variantInfo.name}, with ${symbolism}, imbued with the intention: "${intention}", ethereal, magical, detailed`;
-  
-      const response = await fetch(
-        "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-dev",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${import.meta.env.VITE_HUGGING_FACE}`, // ✅ correct for Vite+Vercel
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ inputs: prompt }),
-        }
-      );
-  
+
+      // Call your backend API instead of Hugging Face directly
+      const response = await fetch('/api/generate-image', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt,
+          cardName,
+          variant: card.variant,
+          intention
+        }),
+      });
+
       if (!response.ok) {
-        throw new Error(`AI API failed: ${response.status} ${response.statusText}`);
+        throw new Error(`Backend API failed: ${response.status} ${response.statusText}`);
       }
-  
-      const blob = await response.blob();
-      return URL.createObjectURL(blob);
+
+      const data = await response.json();
+      
+      if (data.success && data.image) {
+        return data.image; // Base64 data URL from backend
+      } else {
+        // If AI generation failed, create a placeholder
+        console.log('AI generation unavailable, creating placeholder:', data.message);
+        return await createPlaceholderImage(card);
+      }
+
     } catch (error) {
       console.error("AI image generation failed:", error);
-      return null;
+      // Fallback to placeholder on any error
+      return await createPlaceholderImage(card);
     }
+  };
+
+  // Placeholder image generator for fallback
+  const createPlaceholderImage = async (card) => {
+    return new Promise((resolve) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = 320;
+      canvas.height = 450;
+      
+      // Get card colors for consistent styling
+      const cardColors = getCardColors(card, TAROT_VARIANTS[card.variant] || TAROT_VARIANTS['rider-waite']);
+      
+      // Create mystical gradient background
+      const gradient = ctx.createRadialGradient(160, 225, 0, 160, 225, 300);
+      gradient.addColorStop(0, cardColors.primary + '80');
+      gradient.addColorStop(0.5, cardColors.secondary + '60');
+      gradient.addColorStop(1, cardColors.accent + '20');
+      
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, 320, 450);
+      
+      // Add mystical particles
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+      for (let i = 0; i < 30; i++) {
+        ctx.beginPath();
+        ctx.arc(
+          Math.random() * 320, 
+          Math.random() * 450, 
+          Math.random() * 2 + 0.5, 
+          0, 
+          Math.PI * 2
+        );
+        ctx.fill();
+      }
+      
+      // Add card-specific symbol or pattern
+      ctx.strokeStyle = cardColors.accent + 'CC';
+      ctx.lineWidth = 3;
+      ctx.lineCap = 'round';
+      
+      // Draw mystical geometric pattern
+      const centerX = 160;
+      const centerY = 225;
+      for (let i = 0; i < 8; i++) {
+        const angle = (i / 8) * Math.PI * 2;
+        const x = centerX + Math.cos(angle) * 80;
+        const y = centerY + Math.sin(angle) * 80;
+        
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.lineTo(x, y);
+        ctx.stroke();
+        
+        // Add circles at endpoints
+        ctx.beginPath();
+        ctx.arc(x, y, 8, 0, Math.PI * 2);
+        ctx.fillStyle = cardColors.accent + '60';
+        ctx.fill();
+        ctx.stroke();
+      }
+      
+      canvas.toBlob((blob) => {
+        resolve(URL.createObjectURL(blob));
+      });
+    });
   };
 
 
