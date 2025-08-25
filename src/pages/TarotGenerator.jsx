@@ -829,7 +829,7 @@ const generateAIImage = async (card, intention) => {
       {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${process.env.VITE_HUGGING_FACE_TOKEN}`,
+          Authorization: `Bearer ${import.meta.env.VITE_HUGGING_FACE_TOKEN}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ inputs: prompt }),
