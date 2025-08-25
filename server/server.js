@@ -346,6 +346,79 @@ app.use('/api/*', (req, res) => {
   });
 });
 
+
+// Add this to your server.js file or create a new route file
+
+// AI Image generation route
+app.post('/api/generate-image', async (req, res) => {
+  try {
+    const { prompt, cardName, variant, intention } = req.body;
+
+    if (!prompt) {
+      return res.status(400).json({
+        error: 'Missing prompt',
+        message: 'Prompt is required for image generation'
+      });
+    }
+
+    // Enhanced prompt for better tarot card images
+    const enhancedPrompt = `${prompt}, mystical tarot card art, ethereal, magical symbols, ornate border, vintage tarot style, high quality digital art`;
+
+    console.log('Generating image with prompt:', enhancedPrompt);
+
+    const response = await fetch(
+      'https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-dev',
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.HUGGING_FACE_TOKEN}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          inputs: enhancedPrompt,
+          parameters: {
+            width: 512,
+            height: 768,
+            num_inference_steps: 20
+          }
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      console.error('Hugging Face API error:', response.status, response.statusText);
+      
+      // If API fails, return a success response with null image
+      // This allows the frontend to continue working with placeholder
+      return res.json({
+        success: true,
+        image: null,
+        message: 'AI service temporarily unavailable, using placeholder'
+      });
+    }
+
+    const imageBuffer = await response.arrayBuffer();
+    const base64Image = Buffer.from(imageBuffer).toString('base64');
+    
+    res.json({
+      success: true,
+      image: `data:image/png;base64,${base64Image}`,
+      prompt: enhancedPrompt
+    });
+
+  } catch (error) {
+    console.error('Image generation error:', error);
+    
+    // Return success with null image instead of error
+    // This ensures the frontend continues to work
+    res.json({
+      success: true,
+      image: null,
+      message: 'AI service unavailable, using placeholder'
+    });
+  }
+});
+
 process.on('SIGTERM', async () => {
   console.log('SIGTERM received. Shutting down gracefully...');
   try {
