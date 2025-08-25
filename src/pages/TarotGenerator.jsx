@@ -814,39 +814,41 @@ const TarotGenerator = () => {
     }
   }, [intention, cardType, suit, variant]);
 
-const generateAIImage = async (card, intention) => {
-  try {
-    if (!card) throw new Error("No card provided for AI image generation");
-
-    const variantInfo = TAROT_VARIANTS[card.variant] || TAROT_VARIANTS["rider-waite"];
-    const cardName = card.name || "Unknown Card";
-    const symbolism = card.symbolism || "mystical symbolism";
-
-    const prompt = `A mystical tarot card image for ${cardName}, inspired by ${variantInfo.name}, with ${symbolism}, imbued with the intention: "${intention}", ethereal, magical, detailed`;
-
-    const response = await fetch(
-      "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-dev",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${import.meta.env.VITE_HUGGING_FACE_TOKEN}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ inputs: prompt }),
+  const generateAIImage = async (card, intention) => {
+    try {
+      if (!card) throw new Error("No card provided for AI image generation");
+  
+      const variantInfo =
+        TAROT_VARIANTS[card.variant] || TAROT_VARIANTS["rider-waite"];
+      const cardName = card.name || "Unknown Card";
+      const symbolism = card.symbolism || "mystical symbolism";
+  
+      const prompt = `A mystical tarot card image for ${cardName}, inspired by ${variantInfo.name}, with ${symbolism}, imbued with the intention: "${intention}", ethereal, magical, detailed`;
+  
+      const response = await fetch(
+        "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-dev",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${import.meta.env.VITE_HUGGING_FACE}`, // ✅ correct for Vite+Vercel
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ inputs: prompt }),
+        }
+      );
+  
+      if (!response.ok) {
+        throw new Error(`AI API failed: ${response.status} ${response.statusText}`);
       }
-    );
-
-    if (!response.ok) {
-      throw new Error(`AI API failed: ${response.status} ${response.statusText}`);
+  
+      const blob = await response.blob();
+      return URL.createObjectURL(blob);
+    } catch (error) {
+      console.error("AI image generation failed:", error);
+      return null;
     }
+  };
 
-    const blob = await response.blob();
-    return URL.createObjectURL(blob);
-  } catch (error) {
-    console.error("AI image generation failed:", error);
-    return null;
-  }
-};
 
 
   const toggleSection = (section) => {
