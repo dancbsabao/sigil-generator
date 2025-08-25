@@ -3,7 +3,7 @@ import axios from 'axios'
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
 
 const authAPI = axios.create({
-  baseURL: `${API_BASE_URL}/api/auth`,
+  baseURL: `${API_BASE_URL}/auth`, // Fixed: removed duplicate /api
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -48,6 +48,7 @@ authAPI.interceptors.response.use(
         if (refreshToken) {
           console.log('🔄 401 detected, attempting token refresh...');
           
+          // Fixed: Use consistent API_BASE_URL
           const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
             refreshToken
           })
@@ -140,6 +141,7 @@ export const logout = async () => {
 
 export const refreshToken = async (refreshToken) => {
   try {
+    // Fixed: Use consistent API_BASE_URL
     const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
       refreshToken
     })
@@ -153,7 +155,7 @@ export const refreshToken = async (refreshToken) => {
 
 export const getCurrentUser = async () => {
   try {
-    console.log('📡 Fetching current user...');
+    console.log('🔡 Fetching current user...');
     const response = await authAPI.get('/me')
     console.log('📦 Get current user API response:', response.data);
     console.log('✅ Current user fetched successfully');
@@ -261,7 +263,7 @@ export const getUsageStats = async () => {
 // Check if user can generate sigils (without recording a generation)
 export const canGenerate = async () => {
   try {
-    console.log('📡 Checking generation ability...');
+    console.log('🔡 Checking generation ability...');
     const response = await authAPI.get('/can-generate')
     console.log('📦 Can generate response:', response.data);
     return response.data
@@ -274,7 +276,7 @@ export const canGenerate = async () => {
 // Record a sigil generation (increments usage counters)
 export const recordGeneration = async () => {
   try {
-    console.log('📡 Recording sigil generation...');
+    console.log('🔡 Recording sigil generation...');
     const response = await authAPI.post('/record-generation')
     console.log('📦 Record generation response:', response.data);
     return response.data
@@ -287,7 +289,7 @@ export const recordGeneration = async () => {
 // Sync user data (including updated usage stats)
 export const syncUserData = async () => {
   try {
-    console.log('📡 Syncing user data...');
+    console.log('🔡 Syncing user data...');
     const response = await getCurrentUser()
     console.log('📦 Sync user data response:', response);
     return response
@@ -306,7 +308,7 @@ export const isTokenExpired = (token) => {
     const currentTime = Date.now() / 1000
     const isExpired = payload.exp < currentTime
     
-    console.log('🕒 Token expiry check:', {
+    console.log('🕐 Token expiry check:', {
       expiresAt: new Date(payload.exp * 1000).toISOString(),
       currentTime: new Date(currentTime * 1000).toISOString(),
       isExpired: isExpired
